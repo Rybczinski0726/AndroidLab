@@ -40,7 +40,7 @@
         android:id="@+id/detail_email"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="rybczinski0726@gmail.com"
+        android:text="rybczinski@gmail.com"
         android:layout_below="@+id/detail_student_image"
         android:layout_marginTop="16dp"
         android:layout_alignParentRight="true"
@@ -76,11 +76,11 @@
                     android:layout_height="match_parent"
                     android:text="Score Chart"/>
 
-                <TextView
+                <include
                     android:id="@+id/detail_score_add"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="Score Add"/>
+                    layout="@layout/include_keyboard"/>
 
                 <TextView
                     android:id="@+id/detail_memo"
