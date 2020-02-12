@@ -25,6 +25,8 @@ public class DetailActivity extends AppCompatActivity {
 
     int studentId = 1;
 
+    MyView scoreView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,6 +42,7 @@ public class DetailActivity extends AppCompatActivity {
         nameView = findViewById(R.id.detail_name);
         phoneView = findViewById(R.id.detail_phone);
         emailView = findViewById(R.id.detail_email);
+        scoreView = findViewById(R.id.detail_score);
 
         OpenHelper helper = new OpenHelper(this);
         SQLiteDatabase db = helper.getReadableDatabase();
@@ -54,6 +57,15 @@ public class DetailActivity extends AppCompatActivity {
             phoneView.setText(cursor.getString(3));
 
             photo = cursor.getString(4);
+
+            Cursor scoreCursor = db.rawQuery("select score from tb_score " +
+                    "where student_id=? order by date desc limit 1",
+                    new String[]{String.valueOf(studentId)});
+            int score = 0;
+            if (scoreCursor.moveToFirst()) {
+                score = scoreCursor.getInt(0);
+            }
+            scoreView.setScore(score);
         }
         db.close();
 
@@ -132,6 +144,8 @@ public class DetailActivity extends AppCompatActivity {
 
                 host.setCurrentTab(0);
                 addScoreView.setText("0");
+
+                scoreView.setScore(Integer.parseInt(score));
             } else if (v == btnBack) {
                 String score = addScoreView.getText().toString();
 

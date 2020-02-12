@@ -36,6 +36,13 @@
         android:layout_marginTop="16dp"
         android:autoLink="phone"/>
 
+    <com.example.pjt_student.MyView
+        android:id="@+id/detail_score"
+        android:layout_width="80px"
+        android:layout_height="80px"
+        android:layout_alignParentRight="true"
+        app:scoreColor="#FF0000"/>
+
     <TextView
         android:id="@+id/detail_email"
         android:layout_width="wrap_content"
