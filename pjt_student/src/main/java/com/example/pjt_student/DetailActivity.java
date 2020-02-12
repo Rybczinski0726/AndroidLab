@@ -1,6 +1,9 @@
 package com.example.pjt_student;
 
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TabHost;
 import android.widget.TextView;
@@ -14,6 +17,8 @@ public class DetailActivity extends AppCompatActivity {
     TextView phoneView;
     TextView emailView;
     TabHost host;
+
+    int studentId = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +34,24 @@ public class DetailActivity extends AppCompatActivity {
         nameView = findViewById(R.id.detail_name);
         phoneView = findViewById(R.id.detail_phone);
         emailView = findViewById(R.id.detail_phone);
+
+        OpenHelper helper = new OpenHelper(this);
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("select * from tb_student where _id=?",
+                new String[]{String.valueOf(studentId)});
+
+        String photo = null;
+
+        if (cursor.moveToFirst()) {
+            nameView.setText(cursor.getString(1));
+            emailView.setText(cursor.getString(2));
+            phoneView.setText(cursor.getString(3));
+
+            photo = cursor.getString(4);
+        }
+        db.close();
+
+
     }
 
     private void initTab() {
