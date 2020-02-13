@@ -2,7 +2,14 @@ package com.example.pjt_student;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.URLSpan;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -12,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -36,6 +44,7 @@ public class DetailActivity extends AppCompatActivity {
         initData();
         initTab();
         initAddScore();
+        initSpannable();
     }
 
     private void initData() {
@@ -181,5 +190,53 @@ public class DetailActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_detail, menu);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    private void initSpannable() {
+        TextView spanvView = findViewById(R.id.spanView);
+        TextView htmlView = findViewById(R.id.htmlView);
+
+        URLSpan urlSpan = new URLSpan("") {
+            @Override
+            public void onClick(View widget) {
+                Toast toast = Toast.makeText(DetailActivity.this, "more click", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        };
+
+        String data = spanvView.getText().toString();
+        Spannable spannable = (Spannable) spanvView.getText();
+
+        int pos = data.indexOf("EXID");
+        while (pos > -1) {
+            spannable.setSpan(new ForegroundColorSpan(Color.RED), pos, pos +4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            pos = data.indexOf("EXID", pos + 1);
+        }
+
+        pos = data.indexOf("more");
+        spannable.setSpan(urlSpan, pos, pos + 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spanvView.setMovementMethod(LinkMovementMethod.getInstance());
+
+        String html = "<font color='blue'>HANI</font><br/><img src='myImage'/>";
+        htmlView.setText(
+                Html.fromHtml(
+                        html,
+                        new MyImageGetter(),
+                        null
+                )
+        );
+    }
+
+    class MyImageGetter implements Html.ImageGetter {
+        @Override
+        public Drawable getDrawable(String source) {
+            if (source.equals("myImage")) {
+                Drawable drawable = ResourcesCompat.getDrawable(getResources(),
+                        R.drawable.hani_1, null);
+                drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+                return drawable;
+            }
+            return null;
+        }
     }
 }
