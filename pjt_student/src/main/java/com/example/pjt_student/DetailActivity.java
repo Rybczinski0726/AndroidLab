@@ -14,12 +14,19 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -36,6 +43,10 @@ public class DetailActivity extends AppCompatActivity {
 
     MyView scoreView;
 
+    ListView listView;
+    ArrayList<HashMap<String, String>> scoreList;
+    SimpleAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +56,38 @@ public class DetailActivity extends AppCompatActivity {
         initTab();
         initAddScore();
         initSpannable();
+        initList();
+    }
+
+    private void initList() {
+        listView = findViewById(R.id.detail_score_list);
+        scoreList = new ArrayList<>();
+
+        OpenHelper helper = new OpenHelper(this);
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("select score, date from tb_score " +
+                        "where student_id=? order by date desc",
+                        new String[]{String.valueOf(studentId)});
+
+        while (cursor.moveToNext()) {
+            HashMap<String, String> map = new HashMap<>();
+            map.put("score", cursor.getString(0));
+            Date d = new Date(Long.parseLong(cursor.getString(1)));
+            SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd");
+            map.put("date", sd.format(d));
+            scoreList.add(map);
+        }
+        db.close();
+
+        adapter = new SimpleAdapter(
+                this,
+                scoreList,
+                R.layout.read_list_item,
+                new String[]{"score", "date"},
+                new int[]{R.id.read_list_score, R.id.read_list_date}
+        );
+
+        listView.setAdapter(adapter);
     }
 
     private void initData() {
@@ -156,6 +199,14 @@ public class DetailActivity extends AppCompatActivity {
                 addScoreView.setText("0");
 
                 scoreView.setScore(Integer.parseInt(score));
+
+                HashMap<String, String> map = new HashMap<>();
+                map.put("score", score);
+                Date d = new Date(date);
+                SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd");
+                map.put("date", sd.format(d));
+                scoreList.add(0, map);
+                adapter.notifyDataSetChanged();
             } else if (v == btnBack) {
                 String score = addScoreView.getText().toString();
 
