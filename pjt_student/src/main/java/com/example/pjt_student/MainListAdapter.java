@@ -2,8 +2,10 @@ package com.example.pjt_student;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,6 +98,18 @@ public class MainListAdapter extends ArrayAdapter<StudentVO> {
                 builder.setView(dialogRoot);
                 AlertDialog dialog = builder.create();
                 dialog.show();
+            }
+        });
+
+        phoneView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (vo.phone != null && !vo.phone.equals("")) {
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_CALL);
+                    intent.setData(Uri.parse("tel:" + vo.phone));
+                    context.startActivity(intent);
+                }
             }
         });
 

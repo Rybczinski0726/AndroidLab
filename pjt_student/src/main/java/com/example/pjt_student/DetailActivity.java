@@ -1,10 +1,15 @@
 package com.example.pjt_student;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Html;
 import android.text.Spannable;
 import android.text.method.LinkMovementMethod;
@@ -12,6 +17,7 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
@@ -24,6 +30,8 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 
@@ -32,7 +40,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-public class DetailActivity extends AppCompatActivity implements TabHost.OnTabChangeListener {
+public class DetailActivity extends AppCompatActivity implements TabHost.OnTabChangeListener, View.OnClickListener {
 
     ImageView studentImageView;
     TextView nameView;
@@ -43,7 +51,7 @@ public class DetailActivity extends AppCompatActivity implements TabHost.OnTabCh
     TextView addScoreView;
     Button btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn0, btnAdd, btnBack;
 
-    int studentId = 1;
+    int studentId;
 
     MyView scoreView;
 
@@ -57,6 +65,9 @@ public class DetailActivity extends AppCompatActivity implements TabHost.OnTabCh
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        Intent intent = getIntent();
+        studentId = intent.getIntExtra("id", 1);
 
         initData();
         initTab();
@@ -139,7 +150,19 @@ public class DetailActivity extends AppCompatActivity implements TabHost.OnTabCh
         }
         db.close();
 
+        studentImageView.setOnClickListener(this);
+        initStudentImage(photo);
+    }
 
+    private void initStudentImage(String path) {
+        if (path != null && !path.equals("")) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = 10;
+            Bitmap bitmap = BitmapFactory.decodeFile(path, options);
+            if (bitmap != null) {
+                studentImageView.setImageBitmap(bitmap);
+            }
+        }
     }
 
     private void initTab() {
@@ -303,6 +326,38 @@ public class DetailActivity extends AppCompatActivity implements TabHost.OnTabCh
         }
     }
 
+    @Override
+    public void onClick(View v) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_PICK);
+        intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+
+        startActivityForResult(intent, 10);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 10 && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            String[] columns = {MediaStore.Images.Media.DATA};
+
+            Cursor cursor = getContentResolver().query(uri, columns, null, null, null);
+            cursor.moveToFirst();
+            String path = cursor.getString(0);
+            Log.d("Rybczinski", "path......" + path);
+            if (path != null) {
+                OpenHelper helper = new OpenHelper(this);
+                SQLiteDatabase db = helper.getWritableDatabase();
+                db.execSQL("update tb_student set photo=? where _id=?",
+                        new String[]{path, String.valueOf(studentId)});
+                db.close();
+                initStudentImage(path);
+            }
+        }
+    }
+
     class MyImageGetter implements Html.ImageGetter {
         @Override
         public Drawable getDrawable(String source) {
@@ -344,5 +399,37 @@ public class DetailActivity extends AppCompatActivity implements TabHost.OnTabCh
             Log.d("Rybczinski", buffer.toString());
             return buffer.toString();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        String sendData = scoreList.get(0).get("score") + " " + scoreList.get(0).get("date");
+        int id = item.getItemId();
+
+        if (id == R.id.menu_detail_sms) {
+            String phone = phoneView.getText().toString();
+            if (phone != null && !phone.equals("")) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SENDTO);
+                intent.setData(Uri.parse("smsto:" + phone));
+                intent.putExtra("sms_body", sendData);
+                startActivity(intent);
+            }
+        } else if (id == R.id.menu_detail_email) {
+            String email = emailView.getText().toString();
+            if (email != null && !email.equals("")) {
+                String url = "mailto:" + email + "?subject=score&body=" + sendData;
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_SENDTO);
+                intent.setData(Uri.parse(url));
+                try {
+                    startActivity(intent);
+                } catch (Exception e) {
+
+                }
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

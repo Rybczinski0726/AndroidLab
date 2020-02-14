@@ -122,6 +122,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("id", datas.get(position).id);
         startActivity(intent);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        OpenHelper helper = new OpenHelper(this);
+        SQLiteDatabase db = helper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("select * from tb_student order by name",
+                null);
+
+        datas = new ArrayList<>();
+
+        while(cursor.moveToNext()) {
+            StudentVO vo = new StudentVO();
+            vo.id = cursor.getInt(0);
+            vo.name = cursor.getString(1);
+            vo.email = cursor.getString(2);
+            vo.phone = cursor.getString(3);
+            vo.photo = cursor.getString(4);
+            vo.memo = cursor.getString(5);
+            datas.add(vo);
+        }
+        db.close();
+
+        MainListAdapter adapter = new MainListAdapter(this, R.layout.main_list_item, datas);
+        listView.setAdapter(adapter);
     }
 }
