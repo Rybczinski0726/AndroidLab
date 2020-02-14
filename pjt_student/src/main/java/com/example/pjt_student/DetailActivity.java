@@ -10,8 +10,12 @@ import android.text.Spannable;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -28,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements TabHost.OnTabChangeListener {
 
     ImageView studentImageView;
     TextView nameView;
@@ -47,6 +51,8 @@ public class DetailActivity extends AppCompatActivity {
     ArrayList<HashMap<String, String>> scoreList;
     SimpleAdapter adapter;
 
+    WebView webView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +63,17 @@ public class DetailActivity extends AppCompatActivity {
         initAddScore();
         initSpannable();
         initList();
+        initWebView();
+    }
+
+    private void initWebView() {
+        webView = findViewById(R.id.detail_score_chart);
+
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+
+        webView.addJavascriptInterface(new JavascriptText(), "android");
+
     }
 
     private void initList() {
@@ -127,6 +144,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void initTab() {
         host = findViewById(R.id.host);
+        host.setOnTabChangedListener(this);
 
         // Initialize FrameLayout & TabWidget
         host.setup();
@@ -278,6 +296,13 @@ public class DetailActivity extends AppCompatActivity {
         );
     }
 
+    @Override
+    public void onTabChanged(String tabId) {
+        if (tabId.equals("tab2")) {
+            webView.loadUrl("file:///android_asset/test.html");
+        }
+    }
+
     class MyImageGetter implements Html.ImageGetter {
         @Override
         public Drawable getDrawable(String source) {
@@ -288,6 +313,36 @@ public class DetailActivity extends AppCompatActivity {
                 return drawable;
             }
             return null;
+        }
+    }
+
+    public class JavascriptText {
+        @JavascriptInterface
+        public String getWebData() {
+            StringBuffer buffer = new StringBuffer();
+            buffer.append("[");
+            if (scoreList.size() <= 10) {
+                int j = 0;
+                for (int i = scoreList.size(); i > 0; i--) {
+                    buffer.append("[" + j + ",");
+                    buffer.append(scoreList.get(i - 1).get("score"));
+                    buffer.append("]");
+                    if (i > 1) buffer.append(",");
+                    j++;
+                }
+            } else {
+                int j = 0;
+                for (int i = 10; i > 0; i--) {
+                    buffer.append("[" + j + ",");
+                    buffer.append(scoreList.get(i - 1).get("score"));
+                    buffer.append("]");
+                    if (i > 1) buffer.append(",");
+                    j++;
+                }
+            }
+            buffer.append("]");
+            Log.d("Rybczinski", buffer.toString());
+            return buffer.toString();
         }
     }
 }
